@@ -6,3 +6,59 @@ debian will ask for timezone to select so we can make this non interactive using
 to build image use command -> docker build -t imgName:tag .(for current directory)
 to run image use command -> docker run -d --NAME nanowebsite -p 9080:80 imageName:tag
 to view running command ->docker ps 
+This Dockerfile outlines the steps for creating a Docker image based on Ubuntu that runs an Apache2 server and sets up specific configurations and content. Here's a line-by-line explanation:
+
+1. Base Image
+dockerfile
+Copy code
+FROM ubuntu:latest
+Uses the latest version of the official Ubuntu image as the base image for the container.
+2. Metadata Labels
+dockerfile
+Copy code
+LABEL "author "="rana"
+LABEL "project"="htmlFromTOOPlate"
+Adds metadata labels to the image to document the author and project name.
+3. Environment Variable
+dockerfile
+Copy code
+ENV DEBIAN_FRONTEND=noninteractive
+Sets the environment variable DEBIAN_FRONTEND to noninteractive to prevent interactive prompts during the apt installation process. This is useful when automating builds.
+4. Update and Install Apache2
+dockerfile
+Copy code
+RUN apt update && install apache2 -y
+Updates the package list with apt update.
+Installs Apache2 (apache2) in the container using apt install. The -y flag automatically answers "yes" to any prompts.
+5. Default Command
+dockerfile
+Copy code
+CMD ["/usr/sbin/apache2ctl","-D","FOREGROUND"]
+Specifies the command to run when the container starts.
+Starts the Apache2 server in the foreground using apache2ctl to ensure the container remains running.
+6. Expose Port
+dockerfile
+Copy code
+EXPOSE 80
+Opens port 80 for incoming traffic to the container. Port 80 is the default for HTTP, used by the Apache server.
+7. Working Directory
+dockerfile
+Copy code
+WORKDIR /var/www/html
+Sets the working directory inside the container to /var/www/html, which is Apache's default directory for serving website files.
+8. Persistent Volume
+dockerfile
+Copy code
+VOLUME /var/log/apache2
+Declares /var/log/apache2 as a volume, ensuring logs written to this directory are stored persistently, even if the container is deleted.
+9. Add and Extract a Tar File
+dockerfile
+Copy code
+ADD nano.tar.gz /var/www/html
+Adds nano.tar.gz from the local host into the container at /var/www/html.
+Automatically extracts the tar.gz archive because ADD has this capability when dealing with compressed files.
+10. Commented Copy Example
+dockerfile
+Copy code
+#COPY nano.tar.gx /var/www/html
+This line is commented out and would use the COPY instruction instead of ADD. However, unlike ADD, COPY simply copies the file without extracting it. If uncommented, nano.tar.gz would be placed as-is in /var/www/html.
