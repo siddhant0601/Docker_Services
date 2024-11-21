@@ -1,0 +1,8 @@
+Download any html template from https://www.tooplate.com/
+for my file it will be nano html 
+download then converted to tar format using tar czvf in ubuntu after unziping from website
+the apache2 service will run the code which will be present in the var/www/html so we have to move this file to var/www/html in our container 
+debian will ask for timezone to select so we can make this non interactive using ENV DEBIAN_FRONTEND=noninteractive
+to build image use command -> docker build -t imgName:tag .(for current directory)
+to run image use command -> docker run -d --NAME nanowebsite -p 9080:80 imageName:tag
+to view running command ->docker ps 
