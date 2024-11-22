@@ -1,0 +1,91 @@
+
+# Multistage Dockerfile: Build and Deployment
+
+This repository contains a **Multistage Dockerfile** that builds and deploys a Java web application. The process is divided into two distinct stages: **Build Stage** and **Deployment Stage**, ensuring efficiency, security, and optimal performance.
+
+---
+
+## Dockerfile Explanation
+
+### Stage 1: Build Stage
+```dockerfile
+FROM openjdk:8 AS BUILD_IMAGE
+RUN apt update && apt install maven -y
+RUN git clone -b vp-docker https://github.com/imranvisualpath/vprofile-repo.git
+RUN cd vprofile-repo && mvn install
+```
+
+- **`FROM openjdk:8 AS BUILD_IMAGE`**:
+  - Creates a build environment based on the OpenJDK 8 image, named `BUILD_IMAGE`.
+  - Java 8 is required to build the project.
+
+- **`RUN apt update && apt install maven -y`**:
+  - Installs Maven, a build tool used to compile the code and manage dependencies.
+
+- **`RUN git clone -b vp-docker https://github.com/imranvisualpath/vprofile-repo.git`**:
+  - Clones the `vp-docker` branch of the GitHub repository containing the source code.
+
+- **`RUN cd vprofile-repo && mvn install`**:
+  - Compiles the Java project, runs tests, and packages it into a `.war` file (`vprofile-v2.war`) located in the `target` directory.
+
+---
+
+### Stage 2: Deployment Stage
+```dockerfile
+FROM tomcat:8-jre11
+
+RUN rm -rf /usr/local/tomcat/webapps/*
+
+COPY --from=BUILD_IMAGE vprofile-repo/target/vprofile-v2.war /usr/local/tomcat/webapps/ROOT.war
+
+EXPOSE 8080
+CMD ["catalina.sh", "run"]
+```
+
+- **`FROM tomcat:8-jre11`**:
+  - Uses the Tomcat 8 image with Java 11 as the runtime environment.
+
+- **`RUN rm -rf /usr/local/tomcat/webapps/*`**:
+  - Removes default applications in the Tomcat `webapps` directory to ensure a clean deployment.
+
+- **`COPY --from=BUILD_IMAGE vprofile-repo/target/vprofile-v2.war /usr/local/tomcat/webapps/ROOT.war`**:
+  - Copies the `.war` file from the `BUILD_IMAGE` stage into the Tomcat deployment directory.
+
+- **`EXPOSE 8080`**:
+  - Exposes port 8080 for HTTP traffic.
+
+- **`CMD ["catalina.sh", "run"]`**:
+  - Starts the Tomcat server.
+
+---
+
+## Why Multistage Builds?
+
+Using a multistage Dockerfile provides the following advantages:
+
+1. **Smaller Final Image Size**:
+   - The build environment (Maven, Git, source code) is excluded, reducing image size.
+   
+2. **Separation of Concerns**:
+   - Build and runtime processes are isolated, simplifying maintenance and troubleshooting.
+
+3. **Improved Security**:
+   - Eliminates unnecessary tools like Maven and Git from the final runtime image.
+
+4. **Caching Efficiency**:
+   - Changes in source code or runtime environment do not affect unrelated stages.
+
+5. **Portability**:
+   - Produces a lightweight, production-ready image.
+
+---
+
+## Single-Stage Build: Why Avoid It?
+
+While combining both stages into one image is possible, it is less ideal because:
+- The image will be larger, including unnecessary build dependencies.
+- Build and runtime concerns are mixed, making it harder to maintain.
+- Additional tools like Maven or Git could introduce security vulnerabilities.
+- The image will not be optimized for deployment.
+
+By separating into two stages, the Dockerfile achieves better efficiency, security, and production-readiness.
